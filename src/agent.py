@@ -60,7 +60,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             [
                 transport.input(),
                 stt,
-                STTLogger(),
+                # STTLogger(),
                 user_aggregator,
                 llm,
                 tts,
