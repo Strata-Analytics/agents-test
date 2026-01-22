@@ -24,6 +24,9 @@ try:
 except ImportError:
     pass
 
+# Servidores ICE (STUN/TURN) para WebRTC en producción
+ICE_SERVERS = os.getenv("ICE_SERVERS", "stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302").split(",")
+
 # Configuración de transports
 transport_params = {
     "daily": lambda: DailyParams(
@@ -40,6 +43,7 @@ transport_params = {
         audio_in_enabled=True,
         audio_out_enabled=True,
         vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=0.2)),
+        ice_servers=ICE_SERVERS,
     ),
 }
 

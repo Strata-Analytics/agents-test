@@ -62,7 +62,7 @@ Agente conversacional de IA construido con Pipecat AI, que incluye capacidades d
 ./run_piper.sh
 
 # Terminal 2: Agente con logging
-./run_with_logs.sh
+./run_agent.sh
 ```
 
 Los logs se guardan automáticamente en `logs/pipeline_debug.log` con métricas detalladas de OpenTelemetry (tokens, latencias, transcripciones).
