@@ -4,3 +4,12 @@ python-dotenv
 loguru
 piper-tts
 onnxruntime
+flask
+pipecat-ai[local-smart-turn-v3]
+pipecat-ai[groq]
+pipecat-ai[daily]
+pipecat-ai[runner]
+pipecat-ai[webrtc]
+fastapi
+websockets
+faster-whisper
