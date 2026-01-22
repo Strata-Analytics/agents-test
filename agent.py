@@ -7,7 +7,8 @@ from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnal
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
 
-from pipecat.frames.frames import LLMRunFrame
+from pipecat.frames.frames import LLMRunFrame, TextFrame
+from pipecat.processors.frame_processor import FrameProcessor
 
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
@@ -56,6 +57,18 @@ transport_params = {
 }
 
 
+class STTLogger(FrameProcessor):
+    def __init__(self, filename="stt_log.txt"):
+        super().__init__()
+        self.filename = filename
+
+    async def process_frame(self, frame, direction):
+        await super().process_frame(frame, direction)
+        if isinstance(frame, TextFrame):
+            with open(self.filename, "a", encoding="utf-8") as f:
+                f.write(frame.text + "\n")
+
+
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     logger.info("Starting bot")
 
@@ -64,7 +77,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         stt = WhisperSTTService(
             model="small",
             device="cpu",
-            compute_type="int8",  # MUY importante para velocidad
+            compute_type="int8", 
             language="es",
         )
 
@@ -86,7 +99,6 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         # LLM — Groq
         llm = GroqLLMService(
             api_key=os.getenv("GROQ_API_KEY"),
-            # model="llama-3.1-8b-instant",
             model="groq/compound",
         )
 
@@ -94,9 +106,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             {
                 "role": "system",
                 "content": (
-                    "Sos un asistente conversacional mexicano. Tenes permitido lenguaje no políticamente correcto. "
+                    "Sos un asistente conectado en un pipeline stt + llm + tts, que repite lo mismo que se interpretó en la fase anterior a modo de probar el modelo stt. "
                     "Respondé corto, claro y sin vueltas. No formatees el texto, ya que los caracteres especiales se leen en voz alta."
-                    "Tu respuesta será hablada en voz alta."
+                    "Tu respuesta será hablada en voz alta. Limitate a responder exactamente lo que escuchaste, nada más. No proceses nada nuevo."
                 ),
             },
         ]
@@ -120,6 +132,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             [
                 transport.input(),   # Audio → pipeline
                 stt,                 # STT
+                STTLogger(),         # Log STT output
                 user_aggregator,     # Usuario → contexto
                 llm,                 # LLM
                 tts,                 # TTS
