@@ -3,3 +3,5 @@ __pycache__/
 .venv/
 voice/
 .DS_Store
+
+*.log
