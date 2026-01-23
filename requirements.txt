@@ -6,7 +6,8 @@ piper-tts
 onnxruntime
 flask
 pipecat-ai[local-smart-turn-v3]
-pipecat-ai[groq]
+pipecat-ai[aws]
+boto3
 pipecat-ai[daily]
 pipecat-ai[runner]
 pipecat-ai[webrtc]

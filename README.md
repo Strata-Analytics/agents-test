@@ -1,6 +1,6 @@
 # Pipecat AI Voice Agent
 
-Agente conversacional de IA construido con Pipecat AI, que incluye capacidades de voz usando Piper TTS, reconocimiento de voz con Whisper y LLM vía Groq.
+Agente conversacional de IA construido con Pipecat AI, que incluye capacidades de voz usando Piper TTS, reconocimiento de voz con Whisper y LLM vía AWS Bedrock.
 
 ## Estructura del Proyecto
 
@@ -25,7 +25,7 @@ Agente conversacional de IA construido con Pipecat AI, que incluye capacidades d
 
 - Python 3.8 o superior
 - uv (gestor de paquetes Python)
-- Clave API de Groq
+- Credenciales de AWS (Access Key y Secret Key) con acceso a Bedrock
 
 ## Instalación
 
@@ -46,7 +46,9 @@ Agente conversacional de IA construido con Pipecat AI, que incluye capacidades d
    Crea `.env` en la raíz:
 
    ```env
-   GROQ_API_KEY=tu_clave_api_groq
+   AWS_ACCESS_KEY_ID=tu_access_key_id
+   AWS_SECRET_ACCESS_KEY=tu_secret_access_key
+   AWS_REGION=us-east-1
 
    CURRENT_VOICE=es_MX-claude-high.onnx
    CURRENT_VOICE_CONFIG=es_MX-claude-high

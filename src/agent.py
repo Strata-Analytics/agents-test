@@ -23,7 +23,9 @@ from helpers import (
     create_stt_service,
     create_tts_service,
     create_llm_service,
-    STTLogger
+    STTLogger,
+    TimingProcessor,
+    TimingStats
 )
 
 
@@ -36,6 +38,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         stt = create_stt_service()
         tts = create_tts_service(session)
         llm = create_llm_service()
+        
+        # Crear sistema de timing
+        timing_stats = TimingStats()
 
         # Configurar mensajes y contexto
         messages = [{"role": "system", "content": SYSTEM_MESSAGE}]
@@ -55,15 +60,18 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             ),
         )
 
-        # Construir pipeline
+        # Construir pipeline con procesadores de timing
         pipeline = Pipeline(
             [
                 transport.input(),
                 stt,
+                TimingProcessor("stt", timing_stats),
                 # STTLogger(),
                 user_aggregator,
                 llm,
+                TimingProcessor("llm", timing_stats),
                 tts,
+                TimingProcessor("tts", timing_stats),
                 transport.output(),
                 assistant_aggregator
             ]
@@ -93,6 +101,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         @transport.event_handler("on_client_disconnected")
         async def on_client_disconnected(transport, client):
             print("Client disconnected")
+            timing_stats.print_stats()
             await task.cancel()
 
         # Ejecutar pipeline

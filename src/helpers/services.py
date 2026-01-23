@@ -4,7 +4,7 @@ import ssl
 import aiohttp
 
 from pipecat.services.whisper.stt import WhisperSTTService
-from pipecat.services.groq.llm import GroqLLMService
+from pipecat.services.aws.llm import AWSBedrockLLMService
 from pipecat.services.piper.tts import PiperTTSService
 
 # Descargar recursos de NLTK necesarios para PiperTTS
@@ -45,8 +45,11 @@ def create_tts_service(session: aiohttp.ClientSession):
 
 
 def create_llm_service():
-    """Crea y configura el servicio de LLM (Groq)"""
-    return GroqLLMService(
-        api_key=os.getenv("GROQ_API_KEY"),
-        model="groq/compound",
+    """Crea y configura el servicio de LLM (AWS Bedrock)"""
+    return AWSBedrockLLMService(
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        aws_session_token=os.getenv("AWS_SESSION_TOKEN"),
+        region=os.getenv("AWS_DEFAULT_REGION", "us-east-1"),
+        model="us.anthropic.claude-haiku-4-5-20251001-v1:0",
     )
