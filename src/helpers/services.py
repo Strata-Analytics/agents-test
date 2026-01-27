@@ -65,8 +65,9 @@ def create_tts_service(session: aiohttp.ClientSession):
     """Crea y configura el servicio de Text-to-Speech (Piper)"""
     tts_service_provider = os.getenv("TTS_SERVICE_PROVIDER", "PIPER")
     if tts_service_provider == "PIPER":
+        base_url = os.getenv("PIPER_BASE_URL", "http://localhost:5002")
         return PiperTTSService(
-            base_url="http://localhost:5002",
+            base_url=base_url,
             aiohttp_session=session,
         )
     elif tts_service_provider == "XTTS":
