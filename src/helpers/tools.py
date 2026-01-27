@@ -58,7 +58,7 @@ async def final_survey(params, problem_solved: int, information_useful: int, age
     await params.result_callback("Encuesta registrada. Agradece al cliente y despídete.")
 
 # --- SCHEMA REGISTRATION ---
-tools_schema = ToolsSchema(standard_tools=[
+tools_list = [
     identify_user,
     search_products,
     check_for_size,
@@ -67,4 +67,6 @@ tools_schema = ToolsSchema(standard_tools=[
     order_cart,
     get_order_status,
     final_survey
-])
+]
+
+tools_schema = ToolsSchema(standard_tools=tools_list)
