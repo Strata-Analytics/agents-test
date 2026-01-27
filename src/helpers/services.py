@@ -6,9 +6,11 @@ import aiohttp
 from deepgram import LiveOptions
 from pipecat.services.whisper.stt import WhisperSTTService
 from pipecat.services.openai.stt import OpenAISTTService
+from pipecat.services.openai.tts import OpenAITTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
 from pipecat.services.aws.llm import AWSBedrockLLMService
 from pipecat.services.piper.tts import PiperTTSService
+from pipecat.services.xtts.tts import XTTSService
 
 # Descargar recursos de NLTK necesarios para PiperTTS
 try:
@@ -31,20 +33,21 @@ except ImportError:
 
 def create_stt_service():
     """Crea y configura el servicio de Speech-to-Text (Whisper)"""
-    if False:
+    stt_service_provider = os.getenv("STT_SERVICE_PROVIDER", "WHISPER")
+    if stt_service_provider == "VOXTRAL":
         return OpenAISTTService(
             model="mistralai/Voxtral-Mini-3B-2507",
             base_url="http://localhost:8000/v1",
             api_key="NONE"
         )
-    elif False:
+    elif stt_service_provider == "WHISPER":
         return WhisperSTTService(
             model="medium",
             device="cpu",
             compute_type="int8", 
             language="es",
         )
-    elif True:
+    elif stt_service_provider == "DEEPGRAM":
         live_options = LiveOptions(
             model="nova-3",
             language="es-419",
@@ -60,10 +63,24 @@ def create_stt_service():
 
 def create_tts_service(session: aiohttp.ClientSession):
     """Crea y configura el servicio de Text-to-Speech (Piper)"""
-    return PiperTTSService(
-        base_url="http://localhost:5002",
-        aiohttp_session=session,
-    )
+    tts_service_provider = os.getenv("TTS_SERVICE_PROVIDER", "PIPER")
+    if tts_service_provider == "PIPER":
+        return PiperTTSService(
+            base_url="http://localhost:5002",
+            aiohttp_session=session,
+        )
+    elif tts_service_provider == "XTTS":
+        return XTTSService(
+            voice_id="Claribel Dervla",
+            base_url="http://localhost:5002",
+            aiohttp_session=session,
+        )
+    elif tts_service_provider == "CHATTERBOX":
+        return OpenAITTSService(
+            base_url="http://localhost:8000/v1"
+            voice="",
+            api_key="NONE"
+        )
 
 
 def create_llm_service():

@@ -8,7 +8,7 @@ flask
 pipecat-ai[local-smart-turn-v3]
 boto3
 pipecat-ai[daily,runner,webrtc,tracing]
-pipecat-ai[aws,openai,deepgram]
+pipecat-ai[aws,openai,deepgram,xtts]
 fastapi
 websockets
 faster-whisper

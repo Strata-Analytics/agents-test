@@ -20,6 +20,7 @@ from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from helpers import (
     transport_params,
     SYSTEM_MESSAGE,
+    tools_schema,
     create_stt_service,
     create_tts_service,
     create_llm_service,
@@ -44,7 +45,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 
         # Configurar mensajes y contexto
         messages = [{"role": "system", "content": SYSTEM_MESSAGE}]
-        context = LLMContext(messages)
+        context = LLMContext(
+            messages,
+            tools=tools_schema
+        )
 
         # Configurar agregadores con estrategias de turn
         user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
