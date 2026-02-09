@@ -11,7 +11,9 @@ from pipecat.frames.frames import (
     StartFrame,
     EndFrame,
     CancelFrame,
+    VADUserStoppedSpeakingFrame,
 )
+from pipecat.processors.frame_processor import FrameDirection
 from pipecat.utils.time import time_now_iso8601
 
 
@@ -22,6 +24,7 @@ class WhisperLiveKitSTT(STTService):
         self.ws = None
         self.recv_task = None
         self.closed = False
+        self._lines_seen = 0
 
     # ---------- lifecycle ----------
 
@@ -57,12 +60,24 @@ class WhisperLiveKitSTT(STTService):
             # empty frame = end of speech
             await self.ws.send(b"")
 
+    # ---------- VAD integration ----------
+
+    async def process_frame(self, frame: Frame, direction: FrameDirection):
+        await super().process_frame(frame, direction)
+        if isinstance(frame, VADUserStoppedSpeakingFrame):
+            await self._flush()
+
     # ---------- receive side ----------
 
     async def _recv_loop(self):
         try:
             async for msg in self.ws:
                 data = json.loads(msg)
+
+                # Skip control messages
+                msg_type = data.get("type", "")
+                if msg_type in ("config", "ready_to_stop"):
+                    continue
 
                 # WhisperLiveKit schema
                 interim = data.get("buffer_transcription", "")
@@ -77,18 +92,25 @@ class WhisperLiveKitSTT(STTService):
                         )
                     )
 
+                # Only emit NEW lines (lines array is cumulative)
                 if lines:
-                    final = " ".join(
-                        l.get("text", "") for l in lines if l.get("text")
-                    ).strip()
-                    if final:
-                        await self.push_frame(
-                            TranscriptionFrame(
-                                text=final,
-                                user_id="",
-                                timestamp=time_now_iso8601(),
+                    if len(lines) < self._lines_seen:
+                        # Server reset the lines (e.g. new utterance)
+                        self._lines_seen = 0
+                    if len(lines) > self._lines_seen:
+                        new_lines = lines[self._lines_seen:]
+                        self._lines_seen = len(lines)
+                        final = " ".join(
+                            l.get("text", "") for l in new_lines if l.get("text")
+                        ).strip()
+                        if final:
+                            await self.push_frame(
+                                TranscriptionFrame(
+                                    text=final,
+                                    user_id="",
+                                    timestamp=time_now_iso8601(),
+                                )
                             )
-                        )
         except asyncio.CancelledError:
             pass
         except Exception as e:
