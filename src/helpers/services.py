@@ -13,6 +13,8 @@ from pipecat.services.aws.tts import PollyTTSService
 from pipecat.services.piper.tts import PiperTTSService
 from pipecat.services.xtts.tts import XTTSService
 
+from helpers.whisper_livekit_custom_integration import WhisperLiveKitSTT
+
 # Descargar recursos de NLTK necesarios para PiperTTS
 try:
     import nltk
@@ -34,7 +36,7 @@ except ImportError:
 
 def create_stt_service():
     """Crea y configura el servicio de Speech-to-Text (Whisper)"""
-    stt_service_provider = os.getenv("STT_SERVICE_PROVIDER", "WHISPER")
+    stt_service_provider = os.getenv("STT_SERVICE_PROVIDER", "WHISPER-STREAM")
     if stt_service_provider == "VOXTRAL":
         return OpenAISTTService(
             model="mistralai/Voxtral-Mini-3B-2507",
@@ -47,6 +49,13 @@ def create_stt_service():
             device="cpu",
             compute_type="int8", 
             language="es",
+        )
+    elif stt_service_provider == "WHISPER-STREAM":
+        ec2_host = os.getenv('EC2_HOST')
+        if not ec2_host:
+            raise ValueError("Must set EC2_HOST")
+        return WhisperLiveKitSTT(
+            url=f"ws://{ec2_host}:{os.getenv('EC2_WHISPER_PORT', 8000)}/asr",
         )
     elif stt_service_provider == "DEEPGRAM":
         live_options = LiveOptions(
@@ -78,8 +87,11 @@ def create_tts_service(session: aiohttp.ClientSession):
             aiohttp_session=session,
         )
     elif tts_service_provider == "CHATTERBOX":
+        ec2_host = os.getenv('EC2_HOST')
+        if not ec2_host:
+            raise ValueError("Must set EC2_HOST")
         return OpenAITTSService(
-            base_url="http://localhost:8000/v1",
+            base_url=f"http://{ec2_host}:{os.getenv('EC2_CHATTERBOX_PORT', 8004)}/v1",
             voice="",
             api_key="NONE"
         )
