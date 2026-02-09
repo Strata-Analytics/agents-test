@@ -9,6 +9,7 @@ from pipecat.services.openai.stt import OpenAISTTService
 from pipecat.services.openai.tts import OpenAITTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
 from pipecat.services.aws.llm import AWSBedrockLLMService
+from pipecat.services.aws.tts import PollyTTSService
 from pipecat.services.piper.tts import PiperTTSService
 from pipecat.services.xtts.tts import XTTSService
 
@@ -63,7 +64,7 @@ def create_stt_service():
 
 def create_tts_service(session: aiohttp.ClientSession):
     """Crea y configura el servicio de Text-to-Speech (Piper)"""
-    tts_service_provider = os.getenv("TTS_SERVICE_PROVIDER", "PIPER")
+    tts_service_provider = os.getenv("TTS_SERVICE_PROVIDER", "POLLY")
     if tts_service_provider == "PIPER":
         base_url = os.getenv("PIPER_BASE_URL", "http://localhost:5002")
         return PiperTTSService(
@@ -81,6 +82,12 @@ def create_tts_service(session: aiohttp.ClientSession):
             base_url="http://localhost:8000/v1",
             voice="",
             api_key="NONE"
+        )
+    elif tts_service_provider == "POLLY":
+        return PollyTTSService(
+            voice="Lupe",
+            speech_engine="generative",
+            language="es-US"
         )
 
 
