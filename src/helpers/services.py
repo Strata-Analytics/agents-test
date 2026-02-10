@@ -1,60 +1,24 @@
 """Servicios de STT, TTS y LLM"""
 import os
-import ssl
 import aiohttp
 
 from deepgram import LiveOptions
-from pipecat.services.whisper.stt import WhisperSTTService
-from pipecat.services.openai.stt import OpenAISTTService
-from pipecat.services.openai.tts import OpenAITTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
 from pipecat.services.aws.llm import AWSBedrockLLMService
 from pipecat.services.aws.tts import PollyTTSService
 from pipecat.services.piper.tts import PiperTTSService
-from pipecat.services.xtts.tts import XTTSService
 
 from helpers.whisper_livekit_custom_integration import WhisperLiveKitSTT
 from helpers.chatterbox_custom_integration import ChatterboxServerTTS, ChatterboxServerTTSOpenAI
 
-# Descargar recursos de NLTK necesarios para PiperTTS
-try:
-    import nltk
-    try:
-        # Intentar descargar con SSL normal
-        nltk.download('punkt_tab', quiet=True)
-    except Exception:
-        # Si falla por SSL, intentar sin verificación
-        try:
-            _create_unverified_https_context = ssl._create_unverified_context
-        except AttributeError:
-            pass
-        else:
-            ssl._create_default_https_context = _create_unverified_https_context
-        nltk.download('punkt_tab', quiet=True)
-except ImportError:
-    pass
-
 
 def create_stt_service():
-    """Crea y configura el servicio de Speech-to-Text (Whisper)"""
+    """Crea y configura el servicio de Speech-to-Text"""
     stt_service_provider = os.getenv("STT_SERVICE_PROVIDER", "WHISPER-STREAM")
-    if stt_service_provider == "VOXTRAL":
-        return OpenAISTTService(
-            model="mistralai/Voxtral-Mini-3B-2507",
-            base_url="http://localhost:8000/v1",
-            api_key="NONE"
-        )
-    elif stt_service_provider == "WHISPER":
-        return WhisperSTTService(
-            model="medium",
-            device="cpu",
-            compute_type="int8", 
-            language="es",
-        )
-    elif stt_service_provider == "WHISPER-STREAM":
+    if stt_service_provider == "WHISPER-STREAM":
         ec2_host = os.getenv('EC2_HOST_WHISPER_STREAM', os.getenv('EC2_HOST'))
         if not ec2_host:
-            raise ValueError("Must set EC2_HOST")
+            raise ValueError("Must set EC2_HOST or EC2_HOST_WHISPER_STREAM")
         return WhisperLiveKitSTT(
             url=f"ws://{ec2_host}:{os.getenv('EC2_WHISPER_PORT', 8000)}/asr",
         )
@@ -70,23 +34,17 @@ def create_stt_service():
             live_options=live_options,
             api_key=os.getenv("DEEPGRAM_API_KEY")
         )
+    else:
+        raise ValueError(f"Unknown STT_SERVICE_PROVIDER: {stt_service_provider}")
 
 
 def create_tts_service(session: aiohttp.ClientSession):
-    """Crea y configura el servicio de Text-to-Speech (Piper)"""
+    """Crea y configura el servicio de Text-to-Speech"""
     tts_service_provider = os.getenv("TTS_SERVICE_PROVIDER", "CHATTERBOX_SERVER")
-    if tts_service_provider == "PIPER":
-        ec2_host = os.getenv('EC2_HOST_PIPER', os.getenv('EC2_HOST'))
-        if not ec2_host:
-            raise ValueError("Must set EC2_HOST")
-        return PiperTTSService(
-            base_url=f"http://{ec2_host}:{os.getenv('EC2_PIPER_PORT', 5002)}",
-            aiohttp_session=session,
-        )
-    elif tts_service_provider == "CHATTERBOX_SERVER":
+    if tts_service_provider == "CHATTERBOX_SERVER":
         ec2_host = os.getenv('EC2_HOST_CHATTERBOX', os.getenv('EC2_HOST'))
         if not ec2_host:
-            raise ValueError("Must set EC2_HOST")
+            raise ValueError("Must set EC2_HOST or EC2_HOST_CHATTERBOX")
         return ChatterboxServerTTS(
             aiohttp_session=session,
             base_url=f"http://{ec2_host}:{os.getenv('EC2_CHATTERBOX_PORT', 8004)}",
@@ -96,11 +54,19 @@ def create_tts_service(session: aiohttp.ClientSession):
     elif tts_service_provider == "CHATTERBOX_SERVER_OPENAI":
         ec2_host = os.getenv('EC2_HOST_CHATTERBOX', os.getenv('EC2_HOST'))
         if not ec2_host:
-            raise ValueError("Must set EC2_HOST")
+            raise ValueError("Must set EC2_HOST or EC2_HOST_CHATTERBOX")
         return ChatterboxServerTTSOpenAI(
             aiohttp_session=session,
             base_url=f"http://{ec2_host}:{os.getenv('EC2_CHATTERBOX_PORT', 8004)}",
             voice="Emily.wav",
+        )
+    elif tts_service_provider == "PIPER":
+        ec2_host = os.getenv('EC2_HOST_PIPER', os.getenv('EC2_HOST'))
+        if not ec2_host:
+            raise ValueError("Must set EC2_HOST or EC2_HOST_PIPER")
+        return PiperTTSService(
+            base_url=f"http://{ec2_host}:{os.getenv('EC2_PIPER_PORT', 5002)}",
+            aiohttp_session=session,
         )
     elif tts_service_provider == "POLLY":
         return PollyTTSService(
@@ -108,6 +74,8 @@ def create_tts_service(session: aiohttp.ClientSession):
             speech_engine="generative",
             language="es-US"
         )
+    else:
+        raise ValueError(f"Unknown TTS_SERVICE_PROVIDER: {tts_service_provider}")
 
 
 def create_llm_service():
