@@ -81,6 +81,9 @@ class ChatterboxServerTTS(TTSService):
             "cfg_weight": self._cfg_weight,
             "speed_factor": self._speed_factor,
         }
+
+        if voice_mode == "clone":
+            payload["reference_audio_filename"] = voice
         if self._seed is not None:
             payload["seed"] = self._seed
 
