@@ -11,9 +11,7 @@ from pipecat.frames.frames import (
     StartFrame,
     EndFrame,
     CancelFrame,
-    VADUserStoppedSpeakingFrame,
 )
-from pipecat.processors.frame_processor import FrameDirection
 from pipecat.utils.time import time_now_iso8601
 
 
@@ -59,13 +57,6 @@ class WhisperLiveKitSTT(STTService):
         if self.ws:
             # empty frame = end of speech
             await self.ws.send(b"")
-
-    # ---------- VAD integration ----------
-
-    async def process_frame(self, frame: Frame, direction: FrameDirection):
-        await super().process_frame(frame, direction)
-        if isinstance(frame, VADUserStoppedSpeakingFrame):
-            await self._flush()
 
     # ---------- receive side ----------
 

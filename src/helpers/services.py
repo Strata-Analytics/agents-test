@@ -51,7 +51,7 @@ def create_stt_service():
             language="es",
         )
     elif stt_service_provider == "WHISPER-STREAM":
-        ec2_host = os.getenv('EC2_HOST')
+        ec2_host = os.getenv('EC2_HOST_WHISPER_STREAM', os.getenv('EC2_HOST'))
         if not ec2_host:
             raise ValueError("Must set EC2_HOST")
         return WhisperLiveKitSTT(
@@ -87,7 +87,7 @@ def create_tts_service(session: aiohttp.ClientSession):
             aiohttp_session=session,
         )
     elif tts_service_provider == "CHATTERBOX":
-        ec2_host = os.getenv('EC2_HOST')
+        ec2_host = os.getenv('EC2_HOST_CHATTERBOX', os.getenv('EC2_HOST'))
         if not ec2_host:
             raise ValueError("Must set EC2_HOST")
         return OpenAITTSService(
