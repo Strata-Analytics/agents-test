@@ -6,14 +6,9 @@ ENV UV_PROJECT_ENVIRONMENT=/usr/local
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    portaudio19-dev \
-    libasound2-dev \
     libsndfile1 \
     curl \
     ca-certificates \
-    libxcb1 \
-    libgl1 \
-    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
@@ -23,11 +18,10 @@ ENV PATH="/root/.local/bin/:$PATH"
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN uv pip install --system -r requirements.txt
+RUN uv pip install --system piper-tts onnxruntime python-dotenv
 
-COPY src/ src/
+COPY run_piper.py .
 
-EXPOSE 7860
+EXPOSE 5002
 
-CMD ["uv", "run", "src/agent.py", "--host", "0.0.0.0"]
+CMD ["python", "run_piper.py"]

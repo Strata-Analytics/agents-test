@@ -10,20 +10,6 @@ from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 
 load_dotenv(override=True)
 
-# Configurar OpenTelemetry si está disponible
-try:
-    from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-    from pipecat.utils.tracing.setup import setup_tracing
-    
-    console_exporter = ConsoleSpanExporter()
-    setup_tracing(
-        service_name="pipecat-voice-agent",
-        exporter=console_exporter,
-        console_export=True,
-    )
-except ImportError:
-    pass
-
 # Servidores ICE (STUN/TURN) para WebRTC en producción
 ICE_SERVERS = os.getenv("ICE_SERVERS", "stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302").split(",")
 
