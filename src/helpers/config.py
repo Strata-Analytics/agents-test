@@ -29,7 +29,6 @@ transport_params = {
         audio_in_enabled=True,
         audio_out_enabled=True,
         vad_analyzer=SileroVADAnalyzer(params=VADParams(stop_secs=0.2)),
-        ice_servers=[{"urls": ICE_SERVERS}]
     ),
 }
 

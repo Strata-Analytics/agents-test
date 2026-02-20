@@ -101,6 +101,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 
 async def bot(runner_args: RunnerArguments):
     """Punto de entrada del bot"""
+    if hasattr(runner_args, "webrtc_connection") and runner_args.webrtc_connection:
+        from helpers.config import ICE_SERVERS
+        runner_args.webrtc_connection._ice_servers = ICE_SERVERS
     transport = await create_transport(runner_args, transport_params)
     await run_bot(transport, runner_args)
 
